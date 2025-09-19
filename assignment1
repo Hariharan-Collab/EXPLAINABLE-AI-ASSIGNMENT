@@ -1,0 +1,361 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyPX7M7Bmu5XcrBcrRAADlNf",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/Hariharan-Collab/EXPLAINABLE-AI-ASSIGNMENT/blob/main/assignment1\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 1,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "1y-qOBKbKxFH",
+        "outputId": "4cc5db54-f721-40e4-9f55-ae808baea65b"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "   Sales Visits  Actual  Prediction  SHAP Value  Final = Baseline + SHAP  \\\n",
+            "0             2      10   10.823529   -5.576471                10.823529   \n",
+            "1             4      20   20.117647    3.717647                20.117647   \n",
+            "2             3      15   15.470588   -0.929412                15.470588   \n",
+            "3             2      12   10.823529   -5.576471                10.823529   \n",
+            "4             5      25   24.764706    8.364706                24.764706   \n",
+            "\n",
+            "  Over/Under  \n",
+            "0       Over  \n",
+            "1       Over  \n",
+            "2       Over  \n",
+            "3      Under  \n",
+            "4      Under  \n",
+            "\n",
+            "Model Coefficients: Slope = 4.65, Intercept = 1.53\n",
+            "Baseline (Mean of y): 16.40\n"
+          ]
+        }
+      ],
+      "source": [
+        "import numpy as np\n",
+        "import pandas as pd\n",
+        "import matplotlib.pyplot as plt\n",
+        "from sklearn.linear_model import LinearRegression\n",
+        "\n",
+        "# Dataset\n",
+        "X = np.array([2, 4, 3, 2, 5]).reshape(-1, 1)\n",
+        "y = np.array([10, 20, 15, 12, 25])\n",
+        "\n",
+        "# Linear Regression Model\n",
+        "model = LinearRegression()\n",
+        "model.fit(X, y)\n",
+        "\n",
+        "# Coefficients\n",
+        "slope = model.coef_[0]\n",
+        "intercept = model.intercept_\n",
+        "\n",
+        "# Baseline: Mean of y\n",
+        "baseline = np.mean(y)\n",
+        "\n",
+        "# Predictions\n",
+        "predictions = model.predict(X)\n",
+        "\n",
+        "# SHAP values = prediction - baseline\n",
+        "shap_values = predictions - baseline\n",
+        "\n",
+        "# Results Table\n",
+        "df = pd.DataFrame({\n",
+        "    'Sales Visits': X.flatten(),\n",
+        "    'Actual': y,\n",
+        "    'Prediction': predictions,\n",
+        "    'SHAP Value': shap_values,\n",
+        "    'Final = Baseline + SHAP': baseline + shap_values,\n",
+        "    'Over/Under': ['Over' if p > a else 'Under' for p, a in zip(predictions, y)]\n",
+        "})\n",
+        "\n",
+        "print(df)\n",
+        "print(f\"\\nModel Coefficients: Slope = {slope:.2f}, Intercept = {intercept:.2f}\")\n",
+        "print(f\"Baseline (Mean of y): {baseline:.2f}\")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Question 2\n",
+        "from sklearn.linear_model import LinearRegression\n",
+        "\n",
+        "# Dataset\n",
+        "X = np.array([\n",
+        "    [5, 30],\n",
+        "    [7, 25],\n",
+        "    [4, 35],\n",
+        "    [6, 20],\n",
+        "    [3, 40]\n",
+        "])\n",
+        "y = np.array([75, 85, 70, 90, 65])\n",
+        "\n",
+        "# Model\n",
+        "model = LinearRegression()\n",
+        "model.fit(X, y)\n",
+        "\n",
+        "# Coefficients and Intercept\n",
+        "coefs = model.coef_\n",
+        "intercept = model.intercept_\n",
+        "\n",
+        "# Baseline: Mean of y\n",
+        "baseline = np.mean(y)\n",
+        "\n",
+        "# Predictions\n",
+        "preds = model.predict(X)\n",
+        "shap_total = preds - baseline\n",
+        "\n",
+        "# SHAP attribution\n",
+        "shap_notifications = coefs[0] * (X[:, 0] - np.mean(X[:, 0]))\n",
+        "shap_delivery = coefs[1] * (X[:, 1] - np.mean(X[:, 1]))\n",
+        "\n",
+        "# Results\n",
+        "df = pd.DataFrame({\n",
+        "    'Notifications': X[:, 0],\n",
+        "    'Delivery Time': X[:, 1],\n",
+        "    'Actual Retention': y,\n",
+        "    'Prediction': preds,\n",
+        "    'SHAP Notifs': shap_notifications,\n",
+        "    'SHAP Delivery': shap_delivery,\n",
+        "    'Final = Base+SHAPs': baseline + shap_notifications + shap_delivery,\n",
+        "    'Over/Under': ['Over' if p > a else 'Under' for p, a in zip(preds, y)]\n",
+        "})\n",
+        "\n",
+        "print(df)\n",
+        "print(f\"\\nCoefficients: Notifications = {coefs[0]:.2f}, Delivery Time = {coefs[1]:.2f}\")\n",
+        "print(f\"Baseline (Mean Retention): {baseline:.2f}\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "eBJ0plkjK_p_",
+        "outputId": "485ef49e-f613-4003-a7c8-96db4e3b7856"
+      },
+      "execution_count": 2,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "   Notifications  Delivery Time  Actual Retention  Prediction  SHAP Notifs  \\\n",
+            "0              5             30                75   77.000000     0.000000   \n",
+            "1              7             25                85   84.368421     1.578947   \n",
+            "2              4             35                70   70.421053    -0.789474   \n",
+            "3              6             20                90   89.368421     0.789474   \n",
+            "4              3             40                65   63.842105    -1.578947   \n",
+            "\n",
+            "   SHAP Delivery  Final = Base+SHAPs Over/Under  \n",
+            "0      -0.000000           77.000000       Over  \n",
+            "1       5.789474           84.368421      Under  \n",
+            "2      -5.789474           70.421053       Over  \n",
+            "3      11.578947           89.368421      Under  \n",
+            "4     -11.578947           63.842105      Under  \n",
+            "\n",
+            "Coefficients: Notifications = 0.79, Delivery Time = -1.16\n",
+            "Baseline (Mean Retention): 77.00\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Question 3\n",
+        "\n",
+        "import shap\n",
+        "from sklearn.datasets import load_diabetes\n",
+        "from sklearn.model_selection import train_test_split\n",
+        "from sklearn.linear_model import LinearRegression\n",
+        "\n",
+        "# Load data\n",
+        "X, y = load_diabetes(return_X_y=True)\n",
+        "feature_names = load_diabetes().feature_names\n",
+        "\n",
+        "# Train/test split\n",
+        "X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)\n",
+        "\n",
+        "# Model\n",
+        "model = LinearRegression()\n",
+        "model.fit(X_train, y_train)\n",
+        "\n",
+        "# Baseline\n",
+        "baseline = np.mean(y_train)\n",
+        "\n",
+        "# SHAP Values\n",
+        "explainer = shap.Explainer(model.predict, X_train)\n",
+        "shap_values = explainer(X_test)\n",
+        "\n",
+        "# First prediction explanation\n",
+        "i = 0\n",
+        "print(\"SHAP values for one test sample:\")\n",
+        "for name, shap_val in zip(feature_names, shap_values[i].values):\n",
+        "    print(f\"{name}: {shap_val:.2f}\")\n",
+        "\n",
+        "# Compare prediction vs actual\n",
+        "print(f\"\\nBaseline: {baseline:.2f}\")\n",
+        "print(f\"Prediction: {model.predict([X_test[i]])[0]:.2f}\")\n",
+        "print(f\"Actual: {y_test[i]:.2f}\")\n",
+        "\n",
+        ""
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "R2-s8GvFLFCR",
+        "outputId": "a849f3f6-4d9e-41af-e214-6c5580231d83"
+      },
+      "execution_count": 3,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "SHAP values for one test sample:\n",
+            "age: 2.13\n",
+            "sex: 10.38\n",
+            "bmi: -5.44\n",
+            "bp: -7.93\n",
+            "s1: -113.88\n",
+            "s2: 63.74\n",
+            "s3: 2.96\n",
+            "s4: 7.34\n",
+            "s5: 17.35\n",
+            "s6: -0.36\n",
+            "\n",
+            "Baseline: 154.34\n",
+            "Prediction: 137.95\n",
+            "Actual: 219.00\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Question 4\n",
+        "import pandas as pd\n",
+        "import numpy as np\n",
+        "import shap\n",
+        "import matplotlib.pyplot as plt\n",
+        "from sklearn.linear_model import LinearRegression\n",
+        "from sklearn.model_selection import train_test_split\n",
+        "from sklearn.preprocessing import OneHotEncoder\n",
+        "\n",
+        "# 1. Load dataset\n",
+        "df = pd.read_csv(\"student-mat.csv\", sep=';')  # Make sure this CSV is in your working directory\n",
+        "\n",
+        "# 2. Select relevant features\n",
+        "features = ['studytime', 'failures', 'absences', 'health', 'goout', 'age', 'Medu', 'Fedu']\n",
+        "X = df[features]\n",
+        "y = df['G3']\n",
+        "\n",
+        "# 3. Train-test split\n",
+        "X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)\n",
+        "\n",
+        "# 4. Fit linear regression\n",
+        "model = LinearRegression()\n",
+        "model.fit(X_train, y_train)\n",
+        "\n",
+        "# 5. Baseline (mean of training target)\n",
+        "baseline = np.mean(y_train)\n",
+        "print(\"Baseline (mean of training final scores):\", baseline)\n",
+        "\n",
+        "# 6. SHAP analysis\n",
+        "explainer = shap.Explainer(model.predict, X_train)\n",
+        "shap_values = explainer(X_test)\n",
+        "\n",
+        "# 7. Confirm SHAP prediction = baseline + sum(SHAPs)\n",
+        "for i in range(3):  # Show for first 3 test records\n",
+        "    shap_sum = shap_values[i].values.sum()\n",
+        "    predicted = model.predict([X_test.iloc[i]])[0]\n",
+        "    diff = predicted - baseline\n",
+        "    print(f\"\\nStudent {i+1}\")\n",
+        "    print(\"Prediction =\", predicted)\n",
+        "    print(\"Baseline + Sum of SHAP values =\", baseline + shap_sum)\n",
+        "    print(\"Actual =\", y_test.iloc[i])\n",
+        "    print(\"SHAP Check ✅\" if np.isclose(predicted, baseline + shap_sum) else \"Mismatch ❌\")\n",
+        "\n",
+        "# 8. Waterfall plot for one prediction\n",
+        "shap.plots.waterfall(shap_values[0], max_display=10)\n",
+        "\n",
+        "# 9. Force plot for entire test set\n",
+        "shap.initjs()\n",
+        "shap.plots.force(shap_values)\n"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 373
+        },
+        "id": "n4NiFQycLWqc",
+        "outputId": "2e8e5d51-1119-428f-9d6e-fc9b9328a5b5"
+      },
+      "execution_count": 5,
+      "outputs": [
+        {
+          "output_type": "error",
+          "ename": "FileNotFoundError",
+          "evalue": "[Errno 2] No such file or directory: 'student-mat.csv'",
+          "traceback": [
+            "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+            "\u001b[0;31mFileNotFoundError\u001b[0m                         Traceback (most recent call last)",
+            "\u001b[0;32m/tmp/ipython-input-3501437488.py\u001b[0m in \u001b[0;36m<cell line: 0>\u001b[0;34m()\u001b[0m\n\u001b[1;32m      9\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     10\u001b[0m \u001b[0;31m# 1. Load dataset\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m---> 11\u001b[0;31m \u001b[0mdf\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mpd\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mread_csv\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m\"student-mat.csv\"\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0msep\u001b[0m\u001b[0;34m=\u001b[0m\u001b[0;34m';'\u001b[0m\u001b[0;34m)\u001b[0m  \u001b[0;31m# Make sure this CSV is in your working directory\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m     12\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     13\u001b[0m \u001b[0;31m# 2. Select relevant features\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+            "\u001b[0;32m/usr/local/lib/python3.12/dist-packages/pandas/io/parsers/readers.py\u001b[0m in \u001b[0;36mread_csv\u001b[0;34m(filepath_or_buffer, sep, delimiter, header, names, index_col, usecols, dtype, engine, converters, true_values, false_values, skipinitialspace, skiprows, skipfooter, nrows, na_values, keep_default_na, na_filter, verbose, skip_blank_lines, parse_dates, infer_datetime_format, keep_date_col, date_parser, date_format, dayfirst, cache_dates, iterator, chunksize, compression, thousands, decimal, lineterminator, quotechar, quoting, doublequote, escapechar, comment, encoding, encoding_errors, dialect, on_bad_lines, delim_whitespace, low_memory, memory_map, float_precision, storage_options, dtype_backend)\u001b[0m\n\u001b[1;32m   1024\u001b[0m     \u001b[0mkwds\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mupdate\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mkwds_defaults\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m   1025\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m-> 1026\u001b[0;31m     \u001b[0;32mreturn\u001b[0m \u001b[0m_read\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mfilepath_or_buffer\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mkwds\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m   1027\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m   1028\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n",
+            "\u001b[0;32m/usr/local/lib/python3.12/dist-packages/pandas/io/parsers/readers.py\u001b[0m in \u001b[0;36m_read\u001b[0;34m(filepath_or_buffer, kwds)\u001b[0m\n\u001b[1;32m    618\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    619\u001b[0m     \u001b[0;31m# Create the parser.\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m--> 620\u001b[0;31m     \u001b[0mparser\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mTextFileReader\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mfilepath_or_buffer\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0;34m**\u001b[0m\u001b[0mkwds\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m    621\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    622\u001b[0m     \u001b[0;32mif\u001b[0m \u001b[0mchunksize\u001b[0m \u001b[0;32mor\u001b[0m \u001b[0miterator\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+            "\u001b[0;32m/usr/local/lib/python3.12/dist-packages/pandas/io/parsers/readers.py\u001b[0m in \u001b[0;36m__init__\u001b[0;34m(self, f, engine, **kwds)\u001b[0m\n\u001b[1;32m   1618\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m   1619\u001b[0m         \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mhandles\u001b[0m\u001b[0;34m:\u001b[0m \u001b[0mIOHandles\u001b[0m \u001b[0;34m|\u001b[0m \u001b[0;32mNone\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0;32mNone\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m-> 1620\u001b[0;31m         \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0m_engine\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0m_make_engine\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mf\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mengine\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m   1621\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m   1622\u001b[0m     \u001b[0;32mdef\u001b[0m \u001b[0mclose\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mself\u001b[0m\u001b[0;34m)\u001b[0m \u001b[0;34m->\u001b[0m \u001b[0;32mNone\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+            "\u001b[0;32m/usr/local/lib/python3.12/dist-packages/pandas/io/parsers/readers.py\u001b[0m in \u001b[0;36m_make_engine\u001b[0;34m(self, f, engine)\u001b[0m\n\u001b[1;32m   1878\u001b[0m                 \u001b[0;32mif\u001b[0m \u001b[0;34m\"b\"\u001b[0m \u001b[0;32mnot\u001b[0m \u001b[0;32min\u001b[0m \u001b[0mmode\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m   1879\u001b[0m                     \u001b[0mmode\u001b[0m \u001b[0;34m+=\u001b[0m \u001b[0;34m\"b\"\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m-> 1880\u001b[0;31m             self.handles = get_handle(\n\u001b[0m\u001b[1;32m   1881\u001b[0m                 \u001b[0mf\u001b[0m\u001b[0;34m,\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m   1882\u001b[0m                 \u001b[0mmode\u001b[0m\u001b[0;34m,\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+            "\u001b[0;32m/usr/local/lib/python3.12/dist-packages/pandas/io/common.py\u001b[0m in \u001b[0;36mget_handle\u001b[0;34m(path_or_buf, mode, encoding, compression, memory_map, is_text, errors, storage_options)\u001b[0m\n\u001b[1;32m    871\u001b[0m         \u001b[0;32mif\u001b[0m \u001b[0mioargs\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mencoding\u001b[0m \u001b[0;32mand\u001b[0m \u001b[0;34m\"b\"\u001b[0m \u001b[0;32mnot\u001b[0m \u001b[0;32min\u001b[0m \u001b[0mioargs\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mmode\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    872\u001b[0m             \u001b[0;31m# Encoding\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m--> 873\u001b[0;31m             handle = open(\n\u001b[0m\u001b[1;32m    874\u001b[0m                 \u001b[0mhandle\u001b[0m\u001b[0;34m,\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    875\u001b[0m                 \u001b[0mioargs\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mmode\u001b[0m\u001b[0;34m,\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+            "\u001b[0;31mFileNotFoundError\u001b[0m: [Errno 2] No such file or directory: 'student-mat.csv'"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "3c23fb51"
+      },
+      "source": [
+        "import requests\n",
+        "\n",
+        "url = \"https://raw.githubusercontent.com/ageron/handson-ml2/master/datasets/housing/student-mat.csv\"\n",
+        "response = requests.get(url)\n",
+        "\n",
+        "with open(\"student-mat.csv\", \"wb\") as f:\n",
+        "    f.write(response.content)"
+      ],
+      "execution_count": null,
+      "outputs": []
+    }
+  ]
+}
